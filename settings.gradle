@@ -1,0 +1,2 @@
+rootProject.name = 'curryware-java-api-server'
+println('Curryware: Message from settings.gradle')
