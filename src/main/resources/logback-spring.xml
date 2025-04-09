@@ -1,0 +1,18 @@
+<configuration>
+
+    <!-- Console appender with JSON formatting -->
+    <appender name="CONSOLE" class="ch.qos.logback.core.ConsoleAppender">
+        <encoder class="net.logstash.logback.encoder.LogstashEncoder" />
+    </appender>
+
+    <!-- Root logger configuration -->
+    <root level="INFO">
+        <appender-ref ref="CONSOLE" />
+    </root>
+
+    <!-- Example package-specific logging level -->
+    <logger name="org.curryware" level="DEBUG">
+        <appender-ref ref="CONSOLE" />
+    </logger>
+
+</configuration>
