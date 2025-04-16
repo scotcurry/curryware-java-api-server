@@ -16,8 +16,11 @@ public class PostgresConfig {
 
     @Bean
     public DataSource dataSource() {
-        String postgresPassword = System.getenv("COMMON_PASSWORD");
-        logger.debug("Postgres password: {}", postgresPassword);
+        String postgresPassword = System.getenv("POSTGRES_PASSWORD");
+        if (postgresPassword == null || postgresPassword.isEmpty()) {
+            logger.error("POSTGRES_PASSWORD environment variable not set");
+            // throw new RuntimeException("POSTGRES_PASSWORD environment variable not set");
+        }
         return DataSourceBuilder.create()
                 .url("jdbc:postgresql://postgres.curryware.org:5432/currywarefantasy")
                 .username("scot")
