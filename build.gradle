@@ -20,7 +20,8 @@ repositories {
 }
 
 dependencies {
-    implementation 'org.springframework.boot:spring-boot-starter-web'
+    implementation 'org.springframework.boot:spring-boot-starter-web:3.4.4'
+    implementation 'org.springframework.boot:spring-boot-starter-jdbc:3.4.4'
     implementation 'net.logstash.logback:logstash-logback-encoder:8.1'
     runtimeOnly 'org.postgresql:postgresql'
     testImplementation 'org.springframework.boot:spring-boot-starter-test'

@@ -2,10 +2,11 @@ package org.curryware.controllers;
 
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
-import org.curryware.currywarejavaapiserver.CurrywareJavaApiServerApplication;
-import org.curryware.playerservice.repositories.PlayerRecord;
-import org.curryware.playerservice.repositories.PlayerService;
+import org.curryware.playerservice.PlayerRecord;
+import org.curryware.playerservice.PlayerService;
 import org.springframework.web.bind.annotation.*;
+
+import java.util.List;
 
 @RestController
 @RequestMapping("players")
@@ -19,13 +20,8 @@ public class PlayerController {
     }
     
     @GetMapping("/getplayers")
-    public @ResponseBody Iterable<PlayerRecord> get() {
+    public @ResponseBody List<PlayerRecord> get() {
         logger.debug("getplayers called");
-        return playerService.findAll();
-    }
-
-    @GetMapping("/player/{player_key}")
-    public @ResponseBody PlayerRecord getPlayerByKey(@PathVariable Integer player_key) {
-        return playerService.viewPlayerDetails(player_key);
+        return playerService.getPlayerNames();
     }
 }
