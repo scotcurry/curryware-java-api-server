@@ -26,6 +26,7 @@ public class GameInfoService {
             gameInfoRecord.setGame_id(String.valueOf(rs.getInt("game_id")));
             gameInfoRecord.setLeague_id(String.valueOf(rs.getString("league_id")));
             gameInfoRecord.setTeam_name(rs.getString("team_name"));
+            gameInfoRecord.setPaid_league(rs.getBoolean("paid_league"));
             return gameInfoRecord;
         };
     }

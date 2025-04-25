@@ -19,4 +19,4 @@ WORKDIR /app
 EXPOSE 8080
 COPY --from=build /src/build/libs/curryware-java-api-server.jar /app/curryware-java-api-server.jar
 
-ENTRYPOINT ["java", "-jar", "/app/curryware-java-api-server.jar"]
+ENTRYPOINT ["java", "-jar", "-Ddd.integration.jdbc-datasource.enabled=true", "/app/curryware-java-api-server.jar"]
