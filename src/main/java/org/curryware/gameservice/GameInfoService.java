@@ -17,10 +17,10 @@ public class GameInfoService {
 
     public List<GameInfoRecord> getCurrentGames() {
         String sql = "SELECT * FROM game_league_info";
-        return jdbcTemplate.query(sql, game_league_info_rowmapper());
+        return jdbcTemplate.query(sql, gameLeagueInfoRowmapper());
     }
 
-    private RowMapper<GameInfoRecord> game_league_info_rowmapper() {
+    private RowMapper<GameInfoRecord> gameLeagueInfoRowmapper() {
         return (rs, rowNum) -> {
             GameInfoRecord gameInfoRecord = new GameInfoRecord();
             gameInfoRecord.setGame_id(String.valueOf(rs.getInt("game_id")));

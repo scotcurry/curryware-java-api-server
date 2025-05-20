@@ -19,4 +19,9 @@ public class PostgresRepository {
         String sql = "SELECT player_name FROM players";
         return jdbcTemplate.queryForList(sql);
     }
+
+    public List<Map<String, Object>> getGameInfo() {
+        String sql = "SELECT * FROM game_league_info";
+        return jdbcTemplate.queryForList(sql);
+    }
 }
