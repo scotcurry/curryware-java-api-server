@@ -17,7 +17,10 @@ public class GameInfoService {
 
     public List<GameInfoRecord> getCurrentGames() {
         String sql = "SELECT * FROM game_league_info";
-        return jdbcTemplate.query(sql, gameLeagueInfoRowmapper());
+        List<GameInfoRecord> gameInfoRecords = jdbcTemplate.query(sql, gameLeagueInfoRowmapper());
+        int totalGames = gameInfoRecords.size();
+        System.out.println(totalGames);
+        return gameInfoRecords;
     }
 
     private RowMapper<GameInfoRecord> gameLeagueInfoRowmapper() {

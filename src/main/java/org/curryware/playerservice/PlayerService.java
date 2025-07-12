@@ -17,7 +17,10 @@ public class PlayerService {
 
     public List<PlayerRecord> getPlayerNames() {
         String sql = "SELECT * FROM player_info";
-        return jdbcTemplate.query(sql, playerRecordRowMapper());
+        List<PlayerRecord> playerRecords = jdbcTemplate.query(sql, playerRecordRowMapper());
+        int totalPlayers = playerRecords.size();
+        System.out.println(totalPlayers);
+        return playerRecords;
     }
 
     private RowMapper<PlayerRecord> playerRecordRowMapper() {
