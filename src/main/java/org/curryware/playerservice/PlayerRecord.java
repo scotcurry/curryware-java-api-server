@@ -7,6 +7,7 @@ public class PlayerRecord {
         private String player_url;
         private String player_team;
         private Integer player_bye_week;
+        private Integer player_uniform_number;
         private String player_position;
         private String player_headshot;
 
@@ -28,6 +29,7 @@ public class PlayerRecord {
         public Integer getPlayer_bye_week() {
             return player_bye_week;
         }
+        public Integer getPlayer_uniform_number() { return player_uniform_number;}
         public String getPlayer_position() {
             return player_position;
         }
@@ -53,6 +55,7 @@ public class PlayerRecord {
         public void setPlayer_bye_week(Integer player_bye_week) {
             this.player_bye_week = player_bye_week;
         }
+        public void setPlayer_uniform_number(Integer player_uniform_number) { this.player_uniform_number = player_uniform_number;}
         public void setPlayer_position(String player_position) {
             this.player_position = player_position;
         }
