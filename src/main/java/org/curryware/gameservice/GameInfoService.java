@@ -16,7 +16,7 @@ public class GameInfoService {
     }
 
     public List<GameInfoRecord> getCurrentGames() {
-        String sql = "SELECT * FROM game_league_info";
+        String sql = "SELECT * FROM game_league_info WHERE game_year = 2025";
         List<GameInfoRecord> gameInfoRecords = jdbcTemplate.query(sql, gameLeagueInfoRowmapper());
         int totalGames = gameInfoRecords.size();
         System.out.println(totalGames);
@@ -30,6 +30,7 @@ public class GameInfoService {
             gameInfoRecord.setLeague_id(String.valueOf(rs.getString("league_id")));
             gameInfoRecord.setTeam_name(rs.getString("team_name"));
             gameInfoRecord.setPaid_league(rs.getBoolean("paid_league"));
+            gameInfoRecord.setGame_year(rs.getInt("game_year"));
             return gameInfoRecord;
         };
     }
