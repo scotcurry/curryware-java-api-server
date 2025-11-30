@@ -1,4 +1,4 @@
-FROM gradle:8.13.0-jdk17-corretto AS build
+FROM gradle:8.14.3-jdk17-corretto AS build
 WORKDIR /src
 COPY . .
 ARG PROJECT_VERSION
