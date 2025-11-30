@@ -5,7 +5,7 @@ ARG PROJECT_VERSION
 RUN ./gradlew build -Pproject.version=${PROJECT_VERSION}
 # RUN apt-get update && apt-get install -y curl=8.13.0 && apt-get clean && -rf /var/lib/apt/lists/*
 
-FROM openjdk:17-jdk-slim AS publish
+FROM amazoncorretto:17-al2-jdk AS publish
 ARG DD_GIT_REPOSITORY_URL
 ARG DD_GIT_COMMIT_SHA
 ARG DD_VERSION
