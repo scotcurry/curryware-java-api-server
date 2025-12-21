@@ -18,7 +18,7 @@ public class TransactionService {
     public List<TransactionRecord> getTransactions() {
         String sql = """
                 SELECT tp.transaction_key, tp.destination_team_id, tp.player_key, player_name, ti.team_name,
-                       tri.transaction_id
+                       tri.transaction_id, tri.transaction_time
                 FROM transaction_player tp
                 JOIN player_info p ON tp.player_key = p.player_season_key
                 JOIN team_info ti ON tp.destination_team_id = ti.team_key

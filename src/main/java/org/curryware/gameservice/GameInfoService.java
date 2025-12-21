@@ -31,6 +31,7 @@ public class GameInfoService {
             gameInfoRecord.setTeam_name(rs.getString("team_name"));
             gameInfoRecord.setPaid_league(rs.getBoolean("paid_league"));
             gameInfoRecord.setGame_year(rs.getInt("game_year"));
+            gameInfoRecord.setLeague_image(rs.getString("league_image"));
             return gameInfoRecord;
         };
     }
