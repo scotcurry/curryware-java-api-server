@@ -18,7 +18,7 @@ public class TransactionService {
     public List<TransactionRecord> getTransactions() {
         String sql = """
                 SELECT tp.transaction_key, tp.destination_team_id, tp.player_key, player_name, ti.team_name,
-                       tri.transaction_id, tri.transaction_time
+                       tri.transaction_id, extract(EPOCH FROM tri.transaction_time) AS transaction_time
                 FROM transaction_player tp
                 JOIN player_info p ON tp.player_key = p.player_season_key
                 JOIN team_info ti ON tp.destination_team_id = ti.team_key
@@ -40,6 +40,7 @@ public class TransactionService {
             transactionRecord.setPlayer_key(rs.getString("player_key"));
             transactionRecord.setTeam_name(rs.getString("team_name"));
             transactionRecord.setTransaction_id(rs.getInt("transaction_id"));
+            transactionRecord.setTransaction_time(rs.getLong("transaction_time"));
             return transactionRecord;
         };
     }
