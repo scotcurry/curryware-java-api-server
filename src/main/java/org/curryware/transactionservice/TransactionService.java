@@ -18,13 +18,14 @@ public class TransactionService {
     public List<TransactionRecord> getTransactions() {
         String sql = """
                 SELECT tp.transaction_key, tp.destination_team_id, tp.player_key, player_name, ti.team_name,
-                       tri.transaction_id, extract(EPOCH FROM tri.transaction_time) AS transaction_time
-                FROM transaction_player tp
-                JOIN player_info p ON tp.player_key = p.player_season_key
-                JOIN team_info ti ON tp.destination_team_id = ti.team_key
-                JOIN transaction_info tri ON tp.transaction_key = tri.transaction_key\s
-                WHERE tp.destination_team = 'waivers'
-                ORDER BY tri.transaction_id DESC""";
+                                                    tri.transaction_id, extract(EPOCH FROM tri.transaction_time) AS transaction_time,
+                                                    p.player_team, p.player_headshot, p.player_name
+                                             FROM transaction_player tp
+                                                      JOIN player_info p ON tp.player_key = p.player_season_key
+                                                      JOIN team_info ti ON tp.destination_team_id = ti.team_key
+                                                      JOIN transaction_info tri ON tp.transaction_key = tri.transaction_key
+                                             WHERE tp.destination_team = 'waivers'
+                                             ORDER BY tri.transaction_id DESC""";
         List<TransactionRecord> transactionRecords = jdbcTemplate.query(sql, transactionRecordRowMapper());
         int totalGames = transactionRecords.size();
         System.out.println(totalGames);
@@ -41,6 +42,9 @@ public class TransactionService {
             transactionRecord.setTeam_name(rs.getString("team_name"));
             transactionRecord.setTransaction_id(rs.getInt("transaction_id"));
             transactionRecord.setTransaction_time(rs.getLong("transaction_time"));
+            transactionRecord.setPlayer_team(rs.getString("player_team"));
+            transactionRecord.setPlayer_headshot(rs.getString("player_headshot"));
+            transactionRecord.setPlayer_name(rs.getString("player_name"));
             return transactionRecord;
         };
     }

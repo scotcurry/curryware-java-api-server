@@ -9,6 +9,8 @@ public class TransactionRecord {
     private String team_name;
     private Integer transaction_id;
     private Long transaction_time;
+    private String player_team;
+    private String player_headshot;
 
     public String getTransaction_key() {
         return transaction_key;
@@ -36,6 +38,10 @@ public class TransactionRecord {
         return transaction_id;
     }
 
+    public String getPlayer_team() { return player_team; }
+
+    public String getPlayer_headshot() { return player_headshot; }
+
     public void setTransaction_key(String transaction_key) {
         this.transaction_key = transaction_key;
     }
@@ -61,4 +67,8 @@ public class TransactionRecord {
     }
 
     public void setTransaction_time(Long transaction_time) { this.transaction_time = transaction_time;}
+
+    public void setPlayer_team(String player_team) { this.player_team = player_team;}
+
+    public void setPlayer_headshot(String player_headshot) { this.player_headshot = player_headshot;}
 }
