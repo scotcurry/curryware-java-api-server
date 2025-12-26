@@ -16,15 +16,31 @@ public class PostgresConfig {
 
     @Bean
     public DataSource dataSource() {
+
+        var configValidator = new DatabaseConfigValidator();
+        var postgresPassword = configValidator.getPassword();
+        var postgresUsername = configValidator.getUsername();
+        var postgresServer = configValidator.getServer();
+        var postgresPort = configValidator.getPort();
+        var postgresDatabase = configValidator.getDatabase();
+        var connectionString = String.format("jdbc:postgresql://%s:%s/%s", postgresServer, postgresPort, postgresDatabase);
+
+        var networkCheck = configValidator.checkNetworkConnectivity(postgresServer, postgresPort);
+        if (!networkCheck) {
+            if (logger.isErrorEnabled()) {
+                logger.error("Cannot connect to Postgres server at {}:{}", postgresServer, postgresPort);
+            }
+            return null;
+        }
+
         try {
-            String postgresPassword = System.getenv("POSTGRES_PASSWORD");
             if (postgresPassword == null || postgresPassword.isEmpty()) {
                 logger.error("POSTGRES_PASSWORD environment variable not set");
                 // throw new RuntimeException("POSTGRES_PASSWORD environment variable not set");
             }
             return DataSourceBuilder.create()
-                    .url("jdbc:postgresql://postgres.curryware.org:5432/currywarefantasy")
-                    .username("scot")
+                    .url(connectionString)
+                    .username(postgresUsername)
                     .password(postgresPassword)
                     .build();
         } catch (Exception e) {
