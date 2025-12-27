@@ -33,6 +33,8 @@ public class PostgresConfig {
                 logger.error("Cannot connect to Postgres server at {}:{}", postgresServer, postgresPort);
             }
             return null;
+        } else {
+            logger.info("Successfully connected to Postgres server at {}:{}", postgresServer, postgresPort);
         }
 
         try {
@@ -41,8 +43,8 @@ public class PostgresConfig {
                 // throw new RuntimeException("POSTGRES_PASSWORD environment variable not set");
             }
             return DataSourceBuilder.create()
-                    .url(connectionString)
-                    .username(postgresUsername)
+                    .url("jdbc:postgresql://postgres.curryware.org:5432/currywarefantasy")
+                    .username("scot")
                     .password(postgresPassword)
                     .build();
         } catch (Exception e) {
