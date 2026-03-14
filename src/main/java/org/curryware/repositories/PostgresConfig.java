@@ -29,28 +29,20 @@ public class PostgresConfig {
 
         var networkCheck = configValidator.checkNetworkConnectivity(postgresServer, postgresPort);
         if (!networkCheck) {
-            if (logger.isErrorEnabled()) {
-                logger.error("Cannot connect to Postgres server at {}:{}", postgresServer, postgresPort);
-            }
-            return null;
+            logger.error("Cannot connect to Postgres server at {}:{}. App will start but database calls will fail.", postgresServer, postgresPort);
         } else {
             logger.info("Successfully connected to Postgres server at {}:{}", postgresServer, postgresPort);
         }
 
-        try {
-            if (postgresPassword == null || postgresPassword.isEmpty()) {
-                logger.error("POSTGRES_PASSWORD environment variable not set");
-                // throw new RuntimeException("POSTGRES_PASSWORD environment variable not set");
-            }
-            return DataSourceBuilder.create()
-                    .url("jdbc:postgresql://postgres.curryware.org:5432/currywarefantasy")
-                    .username("scot")
-                    .password(postgresPassword)
-                    .build();
-        } catch (Exception e) {
-            logger.error("Error creating DataSource", e);
-            throw new RuntimeException(e);
+        if (postgresPassword == null || postgresPassword.isEmpty()) {
+            logger.error("POSTGRES_PASSWORD environment variable not set");
         }
+
+        return DataSourceBuilder.create()
+                .url(connectionString)
+                .username(postgresUsername)
+                .password(postgresPassword)
+                .build();
     }
 
     @Bean
