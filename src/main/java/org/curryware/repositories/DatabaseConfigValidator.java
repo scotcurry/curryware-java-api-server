@@ -30,9 +30,11 @@ public class DatabaseConfigValidator {
     }
 
     private void validateEnvVariables() {
-        if (database == null || password == null || port == null || server == null || username == null) {
-            logger.warn("One or more Postgres environment variables are missing!");
-        }
+        if (database == null) logger.warn("POSTGRES_DATABASE environment variable is not set");
+        if (password == null) logger.warn("POSTGRES_PASSWORD environment variable is not set");
+        if (port == null)     logger.warn("POSTGRES_PORT environment variable is not set");
+        if (server == null)   logger.warn("POSTGRES_SERVER environment variable is not set");
+        if (username == null) logger.warn("POSTGRES_USERNAME environment variable is not set");
     }
 
     public boolean checkNetworkConnectivity(String server, String port) {

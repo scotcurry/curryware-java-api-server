@@ -1,50 +1,40 @@
 package org.curryware.gameservice;
 
 public class GameInfoRecord {
-    private String league_id;
-    private String game_id;
-    private String team_name;
-    private boolean paid_league;
-    private Integer game_year;
-    private String league_image;
+    private String leagueKey;
+    private Integer leagueId;
+    private String leagueName;
+    private String leagueLogoUrl;
+    private Integer numberOfTeams;
+    private String leagueUpdateTimestamp;
+    private String startDate;
+    private String endWeek;
+    private Integer season;
 
-    public String getLeague_id() {
-        return league_id;
-    }
+    public String getLeagueKey() { return leagueKey; }
+    public void setLeagueKey(String leagueKey) { this.leagueKey = leagueKey; }
 
-    public String getGame_id() {
-        return game_id;
-    }
+    public Integer getLeagueId() { return leagueId; }
+    public void setLeagueId(Integer leagueId) { this.leagueId = leagueId; }
 
-    public String getTeam_name() {
-        return team_name;
-    }
+    public String getLeagueName() { return leagueName; }
+    public void setLeagueName(String leagueName) { this.leagueName = leagueName; }
 
-    public boolean isPaid_league() {
-        return paid_league;
-    }
+    public String getLeagueLogoUrl() { return leagueLogoUrl; }
+    public void setLeagueLogoUrl(String leagueLogoUrl) { this.leagueLogoUrl = leagueLogoUrl; }
 
-    public Integer getGame_year() { return game_year;}
+    public Integer getNumberOfTeams() { return numberOfTeams; }
+    public void setNumberOfTeams(Integer numberOfTeams) { this.numberOfTeams = numberOfTeams; }
 
-    public String getLeague_image() { return league_image;}
+    public String getLeagueUpdateTimestamp() { return leagueUpdateTimestamp; }
+    public void setLeagueUpdateTimestamp(String leagueUpdateTimestamp) { this.leagueUpdateTimestamp = leagueUpdateTimestamp; }
 
-    public void setLeague_id(String league_id) {
-        this.league_id = league_id;
-    }
+    public String getStartDate() { return startDate; }
+    public void setStartDate(String startDate) { this.startDate = startDate; }
 
-    public void setGame_id(String game_id) {
-        this.game_id = game_id;
-    }
+    public String getEndWeek() { return endWeek; }
+    public void setEndWeek(String endWeek) { this.endWeek = endWeek; }
 
-    public void setTeam_name(String team_name) {
-        this.team_name = team_name;
-    }
-
-    public void setPaid_league(boolean paid_league) {
-        this.paid_league = paid_league;
-    }
-
-    public void setGame_year(Integer game_year) { this.game_year = game_year;}
-
-    public void setLeague_image(String league_image) { this.league_image = league_image;}
+    public Integer getSeason() { return season; }
+    public void setSeason(Integer season) { this.season = season; }
 }

@@ -24,7 +24,7 @@ public class GameController {
 
     @GetMapping("/get_game_info")
     public @ResponseBody List<GameInfoRecord> get() {
-        logger.debug("get_team_info called");
-        return gameInfoService.getCurrentGames();
+        logger.debug("get_game_info called");
+        return gameInfoService.getAllLeagues();
     }
 }
