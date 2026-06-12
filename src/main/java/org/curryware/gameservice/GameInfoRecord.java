@@ -3,6 +3,7 @@ package org.curryware.gameservice;
 public class GameInfoRecord {
     private String leagueKey;
     private Integer leagueId;
+    private Integer gameId;
     private String leagueName;
     private String leagueLogoUrl;
     private Integer numberOfTeams;
@@ -16,6 +17,9 @@ public class GameInfoRecord {
 
     public Integer getLeagueId() { return leagueId; }
     public void setLeagueId(Integer leagueId) { this.leagueId = leagueId; }
+
+    public Integer getGameId() { return gameId; }
+    public void setGameId(Integer gameId) { this.gameId = gameId; }
 
     public String getLeagueName() { return leagueName; }
     public void setLeagueName(String leagueName) { this.leagueName = leagueName; }

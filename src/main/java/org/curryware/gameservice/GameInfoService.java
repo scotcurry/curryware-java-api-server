@@ -19,7 +19,7 @@ public class GameInfoService {
     }
 
     public List<GameInfoRecord> getAllLeagues() {
-        String sql = "SELECT league_key, league_id, league_name, league_logo_url, number_of_teams, " +
+        String sql = "SELECT league_key, league_id, game_id, league_name, league_logo_url, number_of_teams, " +
                      "league_update_timestamp, start_date, end_week, season " +
                      "FROM all_league_information ORDER BY season DESC, league_id";
         List<GameInfoRecord> records = jdbcTemplate.query(sql, leagueRowMapper());
@@ -32,6 +32,7 @@ public class GameInfoService {
             GameInfoRecord record = new GameInfoRecord();
             record.setLeagueKey(rs.getString("league_key"));
             record.setLeagueId(rs.getInt("league_id"));
+            record.setGameId(rs.getInt("game_id"));
             record.setLeagueName(rs.getString("league_name"));
             record.setLeagueLogoUrl(rs.getString("league_logo_url"));
             record.setNumberOfTeams(rs.getInt("number_of_teams"));
