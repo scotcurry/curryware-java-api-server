@@ -19,7 +19,10 @@ public class TeamInfoService {
     }
 
     public List<TeamInfoRecord> getTeamsByLeague(String gameId, String leagueId) {
-        String leagueKey = gameId + ".l." + leagueId;
+        return getTeamsByLeagueKey(gameId + ".l." + leagueId);
+    }
+
+    public List<TeamInfoRecord> getTeamsByLeagueKey(String leagueKey) {
         String sql = "SELECT league_key, team_key, team_id, team_name, team_logo, " +
                      "previous_season_team_rank, number_of_moves, number_of_trades, " +
                      "draft_position, draft_grade, manager_nicknames " +
