@@ -12,16 +12,16 @@ import org.springframework.web.bind.annotation.RestController;
 
 @RestController
 @RequestMapping("/v1/notificationhandler")
-public class NotificationTokenHandler {
+public class NotificationTokenHandlerController {
 
-    private static final Logger logger = LogManager.getLogger(NotificationTokenHandler.class);
+    private static final Logger logger = LogManager.getLogger(NotificationTokenHandlerController.class);
     private final UserInfoService userInfoService;
 
-    public NotificationTokenHandler(UserInfoService userInfoService) {
+    public NotificationTokenHandlerController(UserInfoService userInfoService) {
         this.userInfoService = userInfoService;
     }
 
-    @GetMapping
+    @GetMapping("/storeToken")
     public ResponseEntity<Void> handleNotificationToken(@RequestParam("deviceToken") String deviceToken) {
         logger.debug("handleNotificationToken called with deviceToken={}", deviceToken);
         boolean success = userInfoService.saveApnsToken(deviceToken);
