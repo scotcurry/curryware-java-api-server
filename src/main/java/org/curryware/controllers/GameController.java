@@ -12,7 +12,7 @@ import org.springframework.web.bind.annotation.RestController;
 import java.util.List;
 
 @RestController
-@RequestMapping("game_info")
+@RequestMapping("/v1/game_info")
 public class GameController {
 
     private static final Logger logger = LogManager.getLogger(GameController.class);
