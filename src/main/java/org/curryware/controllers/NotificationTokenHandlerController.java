@@ -23,8 +23,13 @@ public class NotificationTokenHandlerController {
 
     @PostMapping("/storeToken")
     public ResponseEntity<Void> handleNotificationToken(@RequestBody DeviceTokenRequest request) {
-        logger.debug("handleNotificationToken called with deviceToken={}", request.getDeviceToken());
-        boolean success = userInfoService.saveApnsToken(request.getDeviceToken());
+        logger.debug("handleNotificationToken called with deviceToken={}, deviceVendorId={}, userDeviceType={}, deviceName={}",
+                request.getDeviceToken(), request.getDeviceVendorId(), request.getUserDeviceType(), request.getDeviceName());
+        boolean success = userInfoService.saveDeviceToken(
+                request.getDeviceToken(),
+                request.getDeviceVendorId(),
+                request.getUserDeviceType(),
+                request.getDeviceName());
         return success
                 ? ResponseEntity.status(HttpStatus.OK).build()
                 : ResponseEntity.status(HttpStatus.BAD_REQUEST).build();
@@ -32,6 +37,9 @@ public class NotificationTokenHandlerController {
 
     public static class DeviceTokenRequest {
         private String deviceToken;
+        private String deviceVendorId;
+        private String userDeviceType;
+        private String deviceName;
 
         public String getDeviceToken() {
             return deviceToken;
@@ -39,6 +47,30 @@ public class NotificationTokenHandlerController {
 
         public void setDeviceToken(String deviceToken) {
             this.deviceToken = deviceToken;
+        }
+
+        public String getDeviceVendorId() {
+            return deviceVendorId;
+        }
+
+        public void setDeviceVendorId(String deviceVendorId) {
+            this.deviceVendorId = deviceVendorId;
+        }
+
+        public String getUserDeviceType() {
+            return userDeviceType;
+        }
+
+        public void setUserDeviceType(String userDeviceType) {
+            this.userDeviceType = userDeviceType;
+        }
+
+        public String getDeviceName() {
+            return deviceName;
+        }
+
+        public void setDeviceName(String deviceName) {
+            this.deviceName = deviceName;
         }
     }
 }
