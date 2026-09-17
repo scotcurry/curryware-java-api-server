@@ -17,19 +17,22 @@ public class UserInfoService {
         this.jdbcTemplate = jdbcTemplate;
     }
 
-    public boolean saveDeviceToken(String deviceToken, String deviceVendorId, String userDeviceType, String deviceName) {
-        String sql = "INSERT INTO user_info (user_name, user_device_type, user_device_id, apns_token) " +
-                     "VALUES (?, ?, ?, ?) " +
+    public boolean saveDeviceToken(String deviceToken, String deviceVendorId, String userDeviceType, String deviceName,
+                                   String vendorId) {
+        String sql = "INSERT INTO user_info (user_name, user_device_type, user_device_id, apns_token, vendor_id) " +
+                     "VALUES (?, ?, ?, ?, ?) " +
                      "ON CONFLICT (user_device_id) DO UPDATE SET " +
                      "user_name = EXCLUDED.user_name, " +
                      "user_device_type = EXCLUDED.user_device_type, " +
-                     "apns_token = EXCLUDED.apns_token";
+                     "apns_token = EXCLUDED.apns_token, " +
+                     "vendor_id = EXCLUDED.vendor_id";
         try {
-            int rowsAffected = jdbcTemplate.update(sql, deviceName, userDeviceType, deviceVendorId, deviceToken);
+            int rowsAffected = jdbcTemplate.update(sql, deviceName, userDeviceType, deviceVendorId, deviceToken, vendorId);
             logger.info("Saved apns_token for user_device_id={}, rowsAffected={}", deviceVendorId, rowsAffected);
             return rowsAffected > 0;
         } catch (DataAccessException ex) {
-            logger.error("Failed to save apns_token for user_device_id={}: {}", deviceVendorId, ex.getMessage());
+            logger.error("Failed to save apns_token for user_device_id={}: {}", deviceVendorId, "Data " +
+                    "access exception");
             return false;
         }
     }
