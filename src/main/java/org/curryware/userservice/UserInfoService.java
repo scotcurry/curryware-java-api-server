@@ -19,10 +19,10 @@ public class UserInfoService {
 
     public boolean saveDeviceToken(String deviceToken, String deviceVendorId, String userDeviceType, String deviceName,
                                    String vendorId) {
-        String sql = "INSERT INTO user_info (user_name, user_device_type, user_device_id, apns_token, vendor_id) " +
+        String sql = "INSERT INTO user_info (user_friendly_name, user_device_type, user_device_id, apns_token, vendor_id) " +
                      "VALUES (?, ?, ?, ?, ?) " +
                      "ON CONFLICT (user_device_id) DO UPDATE SET " +
-                     "user_name = EXCLUDED.user_name, " +
+                     "user_friendly_name = EXCLUDED.user_friendly_name, " +
                      "user_device_type = EXCLUDED.user_device_type, " +
                      "apns_token = EXCLUDED.apns_token, " +
                      "vendor_id = EXCLUDED.vendor_id";
