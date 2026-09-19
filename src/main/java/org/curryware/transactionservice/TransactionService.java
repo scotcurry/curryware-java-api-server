@@ -20,7 +20,7 @@ public class TransactionService {
 
     public List<TransactionRecord> getTransactions(String leagueId, String transactionTime) {
         String sql = "SELECT pi.player_name, pi.player_team, pi.player_status, ti.transaction_type, " +
-                     "tp.destination_team " +
+                     "tp.destination_team, ti.transaction_time " +
                      "FROM transaction_info ti " +
                      "JOIN transaction_player tp ON ti.transaction_key = tp.transaction_key " +
                      "JOIN player_info pi ON tp.player_id = pi.player_id " +
@@ -42,6 +42,7 @@ public class TransactionService {
             record.setPlayerStatus(rs.getString("player_status"));
             record.setTransactionType(rs.getString("transaction_type"));
             record.setDestinationTeam(rs.getString("destination_team"));
+            record.setTransactionTime(rs.getTimestamp("transaction_time").toInstant());
             return record;
         };
     }

@@ -1,11 +1,14 @@
 package org.curryware.transactionservice;
 
+import java.time.Instant;
+
 public class TransactionRecord {
     private String playerName;
     private String playerTeam;
     private String playerStatus;
     private String transactionType;
     private String destinationTeam;
+    private Instant transactionTime;
 
     public String getPlayerName() { return playerName; }
     public void setPlayerName(String playerName) { this.playerName = playerName; }
@@ -21,4 +24,7 @@ public class TransactionRecord {
 
     public String getDestinationTeam() { return destinationTeam; }
     public void setDestinationTeam(String destinationTeam) { this.destinationTeam = destinationTeam; }
+
+    public Instant getTransactionTime() { return transactionTime; }
+    public void setTransactionTime(Instant transactionTime) { this.transactionTime = transactionTime; }
 }
