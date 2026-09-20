@@ -6,6 +6,7 @@ public class TransactionRecord {
     private String playerName;
     private String playerTeam;
     private String playerStatus;
+    private String playerHeadshot;
     private String transactionType;
     private String destinationTeam;
     private Instant transactionTime;
@@ -18,6 +19,9 @@ public class TransactionRecord {
 
     public String getPlayerStatus() { return playerStatus; }
     public void setPlayerStatus(String playerStatus) { this.playerStatus = playerStatus; }
+
+    public String getPlayerHeadshot() { return playerHeadshot; }
+    public void setPlayerHeadshot(String playerHeadshot) { this.playerHeadshot = playerHeadshot; }
 
     public String getTransactionType() { return transactionType; }
     public void setTransactionType(String transactionType) { this.transactionType = transactionType; }
