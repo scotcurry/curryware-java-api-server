@@ -18,14 +18,20 @@ Java 17 toolchain is required (configured in build.gradle). Spring Boot 4.0.6.
 Spring Boot REST API for a fantasy sports system backed by PostgreSQL. Follows a layered architecture: Controllers → Services → JDBC queries.
 
 **Package structure** (`org.curryware`):
-- `controllers/` — REST endpoints (`GameController`, `PlayerController`, `TransactionController`)
-- `gameservice/`, `playerservice/`, `transactionservice/` — Business logic services plus data-holding classes (e.g. `TransactionRecord`)
+- `controllers/` — REST endpoints (`GameController`, `TeamController`, `TransactionController`, `NotificationTokenHandlerController`)
+- `gameservice/`, `playerservice/`, `teamservice/`, `transactionservice/`, `userservice/` — Business logic services plus data-holding classes (e.g. `TransactionRecord`)
 - `repositories/` — `PostgresConfig` (DataSource/JdbcTemplate beans, active on `!test` profile), `DatabaseConfigValidator` (env var read + TCP connectivity check on startup), `PostgresRepository` (legacy query methods, largely superseded by service-layer queries)
 
-**REST Endpoints** (all GET):
-- `/game_info/get_game_info` — Game/league info
-- `/players/getplayers` — Player info
-- `/transactions/get_transactions?gameId=X&leagueId=Y` — Waiver transactions (JOIN across `transaction_player`, `player_info`, `team_info`, `transaction_info`)
+**REST Endpoints** — every controller is mapped under `/v1`. Through the cluster ingress they are
+reached at `https://ubuntu-microk8s.curryware.org/java/v1/...` (Traefik strips the `/java` prefix).
+The controllers' `@RequestMapping`/`@GetMapping` annotations are the source of truth:
+- `GET /v1/game_info/get_game_info` — Game/league info
+- `GET /v1/team_info/get_team_info?gameId=X&leagueId=Y` — Team info for a league
+- `GET /v1/team_info/get_teams/{leagueKey}` — Teams in a league
+- `GET /v1/transactions/get_transactions?leagueId=X&transactionTime=Y` — Waiver transactions (JOIN across `transaction_player`, `player_info`, `team_info`, `transaction_info`)
+- `POST /v1/notificationhandler/storeToken` — Stores a device notification token (JSON body `DeviceTokenRequest`)
+
+Unknown paths return 500, not 404: `GlobalExceptionHandler` also catches Spring's `NoResourceFoundException`.
 
 ## Database
 
