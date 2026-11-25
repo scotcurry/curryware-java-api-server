@@ -28,7 +28,7 @@ The controllers' `@RequestMapping`/`@GetMapping` annotations are the source of t
 - `GET /v1/game_info/get_game_info` — Game/league info
 - `GET /v1/team_info/get_team_info?gameId=X&leagueId=Y` — Team info for a league
 - `GET /v1/team_info/get_teams/{leagueKey}` — Teams in a league
-- `GET /v1/transactions/get_transactions?leagueId=X&transactionTime=Y` — Waiver transactions (JOIN across `transaction_player`, `player_info`, `team_info`, `transaction_info`)
+- `GET /v1/transactions/get_transactions?leagueId=X&transactionTime=Y` — Waiver transactions (`transaction_info` JOIN `transaction_player` JOIN `player_info`)
 - `POST /v1/notificationhandler/storeToken` — Stores a device notification token (JSON body `DeviceTokenRequest`)
 
 Unknown paths return 500, not 404: `GlobalExceptionHandler` also catches Spring's `NoResourceFoundException`.
