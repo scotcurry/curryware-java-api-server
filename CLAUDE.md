@@ -18,7 +18,7 @@ Java 17 toolchain is required (configured in build.gradle). Spring Boot 4.0.6.
 Spring Boot REST API for a fantasy sports system backed by PostgreSQL. Follows a layered architecture: Controllers → Services → JDBC queries.
 
 **Package structure** (`org.curryware`):
-- `controllers/` — REST endpoints (`GameController`, `TeamController`, `TransactionController`, `NotificationTokenHandlerController`)
+- `controllers/` — REST endpoints (`GameController`, `PlayerController`, `TeamController`, `TransactionController`, `NotificationTokenHandlerController`)
 - `gameservice/`, `playerservice/`, `teamservice/`, `transactionservice/`, `userservice/` — Business logic services plus data-holding classes (e.g. `TransactionRecord`)
 - `repositories/` — `PostgresConfig` (DataSource/JdbcTemplate beans, active on `!test` profile), `DatabaseConfigValidator` (env var read + TCP connectivity check on startup), `PostgresRepository` (legacy query methods, largely superseded by service-layer queries)
 
@@ -29,9 +29,29 @@ The controllers' `@RequestMapping`/`@GetMapping` annotations are the source of t
 - `GET /v1/team_info/get_team_info?gameId=X&leagueId=Y` — Team info for a league
 - `GET /v1/team_info/get_teams/{leagueKey}` — Teams in a league
 - `GET /v1/transactions/get_transactions?leagueId=X&transactionTime=Y` — Waiver transactions (`transaction_info` JOIN `transaction_player` JOIN `player_info`)
+- `GET /v1/player_info/get_best_available?gameId=X&leagueId=Y[&weeks=N][&position=QB|RB|WR|TE][&minGames=N][&sort=total|per_game][&limit=N]` — A league's available players ranked by fantasy points under the league's scoring (see Best Available Players)
 - `POST /v1/notificationhandler/storeToken` — Stores a device notification token (JSON body `DeviceTokenRequest`)
 
 Unknown paths return 500, not 404: `GlobalExceptionHandler` also catches Spring's `NoResourceFoundException`.
+Missing or non-numeric parameters and `IllegalArgumentException` return 400.
+
+## Best Available Players (`playerservice/`)
+- `AvailablePlayersClient` calls the available-players Cloud Function
+  (`curryware.available-players.url`). It takes 17-30 s per league and returns only Yahoo ids and names.
+- `AvailablePlayersCache` keeps each league's list for `curryware.available-players.cache-ttl` (default
+  15 min). After that, requests still get the old list at once while a background fetch replaces it, and
+  a failed fetch keeps the old list. Only a league's first request waits. The response's `availableAsOf`
+  says how old the list is.
+- `BestAvailableService` does the arithmetic in Postgres: available Yahoo ids → `nflverse_players.yahoo_id`
+  (for the league's season from `all_league_information`) → `nflverse_player_week_stats`, × the league's
+  `league_scoring_value_information` values, regular-season weeks only. `weeks=N` counts back from the
+  latest week that has any stats, including a week still in progress; omitted, it is the season to date.
+- `YahooStatMapping` maps Yahoo stat ids to nflverse columns (16 rows, offensive stats only). Scoring every
+  2026 row with standard PPR values through it matched nflverse's `fantasy_points_ppr` exactly. Kicking and
+  defense stats can't be scored (nflverse_players has only QB/RB/WR/TE); the response lists the league's
+  unscored stat ids in `unscoredStatIds`.
+- 404 when the league, its scoring rules or the season's stats aren't loaded; 502 when the Yahoo list can't
+  be fetched and nothing is cached.
 
 ## Database
 
@@ -46,7 +66,14 @@ Services use `JdbcTemplate` directly (no ORM). `PostgresConfig` reads env vars v
 
 ## Testing
 
-Tests run under the `test` Spring profile. `TestDatabaseConfig` (`@Profile("test")`) supplies Mockito-mocked `DataSource` and `JdbcTemplate` beans, preventing `PostgresConfig` from running and removing the need for a real database connection. Currently only a context-load test exists.
+Tests run under the `test` Spring profile. `TestDatabaseConfig` (`@Profile("test")`) supplies Mockito-mocked `DataSource` and `JdbcTemplate` beans, preventing `PostgresConfig` from running and removing the need for a real database connection.
+
+- Controllers: standalone `MockMvc` with `GlobalExceptionHandler` and a mocked service (see `PlayerControllerTest`).
+- SQL: `BestAvailableServicePostgresTest` runs against a throwaway Postgres named by
+  `CURRYWARE_TEST_POSTGRES_URL` (plus `_USER`/`_PASSWORD`), building tables from the
+  `../curryware-fantasy-database` `create_*.sql` files (override with `CURRYWARE_SCHEMA_DIR`), so schema
+  drift breaks it. Each test uses its own schema, and it refuses to run against `currywarefantasy`. Without
+  the variable it is skipped. Setup steps are in the class comment.
 
 ## CI/CD
 
