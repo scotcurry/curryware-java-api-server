@@ -1,6 +1,5 @@
 package org.curryware.controllers;
 
-import org.curryware.playerservice.AvailablePlayersUnavailableException;
 import org.curryware.playerservice.BestAvailablePlayer;
 import org.curryware.playerservice.BestAvailableResponse;
 import org.curryware.playerservice.BestAvailableService;
@@ -122,15 +121,6 @@ class PlayerControllerTest {
         mockMvc.perform(get(URL).param("gameId", "470").param("leagueId", "523652"))
                 .andExpect(status().isNotFound())
                 .andExpect(jsonPath("$.error").value("Scoring rules for league 470.l.523652 aren't loaded"));
-    }
-
-    @Test
-    void unavailableYahooListIs502() throws Exception {
-        when(service.getBestAvailable(anyInt(), anyInt(), any(), any(), anyInt(), anyString(), anyInt()))
-                .thenThrow(new AvailablePlayersUnavailableException("timed out", new RuntimeException()));
-
-        mockMvc.perform(get(URL).param("gameId", "470").param("leagueId", "523652"))
-                .andExpect(status().isBadGateway());
     }
 
     @Test

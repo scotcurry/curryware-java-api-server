@@ -2,7 +2,6 @@ package org.curryware.controllers;
 
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
-import org.curryware.playerservice.AvailablePlayersUnavailableException;
 import org.curryware.playerservice.LeagueDataNotFoundException;
 import org.springframework.dao.DataAccessException;
 import org.springframework.web.bind.MissingServletRequestParameterException;
@@ -51,13 +50,6 @@ public class GlobalExceptionHandler {
     public ResponseEntity<Map<String, String>> handleLeagueDataNotFound(LeagueDataNotFoundException ex) {
         logger.warn("League data not found: {}", ex.getMessage());
         return ResponseEntity.status(HttpStatus.NOT_FOUND).body(Map.of("error", ex.getMessage()));
-    }
-
-    @ExceptionHandler(AvailablePlayersUnavailableException.class)
-    public ResponseEntity<Map<String, String>> handleAvailablePlayersUnavailable(AvailablePlayersUnavailableException ex) {
-        logger.error("Available players unavailable: {}", ex.getMessage(), ex);
-        return ResponseEntity.status(HttpStatus.BAD_GATEWAY)
-                .body(Map.of("error", "The available-player list from Yahoo couldn't be fetched. Please try again later."));
     }
 
     @ExceptionHandler(Exception.class)

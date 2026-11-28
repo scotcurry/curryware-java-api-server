@@ -36,12 +36,10 @@ Unknown paths return 500, not 404: `GlobalExceptionHandler` also catches Spring'
 Missing or non-numeric parameters and `IllegalArgumentException` return 400.
 
 ## Best Available Players (`playerservice/`)
-- `AvailablePlayersClient` calls the available-players Cloud Function
-  (`curryware.available-players.url`). It takes 17-30 s per league and returns only Yahoo ids and names.
-- `AvailablePlayersCache` keeps each league's list for `curryware.available-players.cache-ttl` (default
-  15 min). After that, requests still get the old list at once while a background fetch replaces it, and
-  a failed fetch keeps the old list. Only a league's first request waits. The response's `availableAsOf`
-  says how old the list is.
+- A league's available players are read from `yahoo_available_players`, which the `curryware-nflverse`
+  available-players CronJobs (one per league, 838859 and 523652) replace every 6 hours. The service never calls
+  the Cloud Function itself. The response's `availableAsOf` is the league's `max(loaded_at)`, so the list can be
+  up to about 6 hours old. A league without a CronJob has no rows and gets a 404.
 - `BestAvailableService` does the arithmetic in Postgres: available Yahoo ids → `nflverse_players.yahoo_id`
   (for the league's season from `all_league_information`) → `nflverse_player_week_stats`, × the league's
   `league_scoring_value_information` values, regular-season weeks only. `weeks=N` counts back from the
@@ -50,8 +48,7 @@ Missing or non-numeric parameters and `IllegalArgumentException` return 400.
   2026 row with standard PPR values through it matched nflverse's `fantasy_points_ppr` exactly. Kicking and
   defense stats can't be scored (nflverse_players has only QB/RB/WR/TE); the response lists the league's
   unscored stat ids in `unscoredStatIds`.
-- 404 when the league, its scoring rules or the season's stats aren't loaded; 502 when the Yahoo list can't
-  be fetched and nothing is cached.
+- 404 when the league, its scoring rules, the season's stats or its available-players list aren't loaded.
 
 ## Database
 
@@ -77,10 +74,18 @@ Tests run under the `test` Spring profile. `TestDatabaseConfig` (`@Profile("test
 
 ## CI/CD
 
-GitHub Actions workflow (`.github/workflows/build-actions.yaml`) triggers on push to `master`:
-1. Builds Docker image (multi-stage, Amazon Corretto 17)
-2. Pushes to Docker Hub (`scotcurry4/curryware-java-api-server`)
-3. Updates Kubernetes manifests in `scotcurry/k8s-manifests` repo
+`.github/workflows/ci.yml` runs `./gradlew test` on every branch push and pull request, with a
+`postgres:17` service container and the private `scotcurry/curryware-fantasy-database` checked out for the
+DDL (secret `CURRYWARE_FANTASY_DATABASE_TOKEN`: a fine-grained token with read-only Contents access to that
+repo), so the SQL tests really run. A final step fails the run if any `*Postgres*` test was skipped. It builds nothing
+deployable.
+
+`.github/workflows/build-actions.yaml` triggers on push to `master`. One deploy runs at a time:
+1. Calls `ci.yml` (job `test`); nothing below runs unless it passes
+2. Builds Docker image (multi-stage, Amazon Corretto 17; its `./gradlew build` runs the tests again, minus
+   the SQL tests)
+3. Pushes to Docker Hub (`scotcurry4/curryware-java-api-server`)
+4. Updates Kubernetes manifests in `scotcurry/k8s-manifests` repo
 
 ## Observability
 

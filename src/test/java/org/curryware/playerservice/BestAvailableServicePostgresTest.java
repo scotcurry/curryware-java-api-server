@@ -10,6 +10,7 @@ import java.io.IOException;
 import java.math.BigDecimal;
 import java.nio.file.Files;
 import java.nio.file.Path;
+import java.sql.Timestamp;
 import java.time.Instant;
 import java.util.ArrayList;
 import java.util.List;
@@ -19,8 +20,6 @@ import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertThrows;
 import static org.junit.jupiter.api.Assertions.fail;
 import static org.junit.jupiter.api.Assumptions.assumeTrue;
-import static org.mockito.Mockito.mock;
-import static org.mockito.Mockito.when;
 
 /**
  * Runs the best-available SQL against a real, throwaway Postgres, with tables created from the
@@ -43,12 +42,13 @@ class BestAvailableServicePostgresTest {
             "create_all_league_information.sql",
             "create_league_scoring_value_information.sql",
             "create_nflverse_players_table.sql",
-            "create_nflverse_player_week_stats_table.sql");
+            "create_nflverse_player_week_stats_table.sql",
+            "create_yahoo_available_players_table.sql");
 
     private static final int GAME = 470;
     private static final int LEAGUE = 523652;
     private static final int SEASON = 2026;
-    private static final Instant FETCHED_AT = Instant.parse("2026-11-27T12:00:00Z");
+    private static final Instant LOADED_AT = Instant.parse("2026-11-27T12:00:00Z");
 
     // Available: QB 101, RB 102, WR 103, TE 105 (no stats) and 999 (a kicker, not in nflverse).
     // WR 104 has the best week but is rostered, so it must never appear.
@@ -83,9 +83,7 @@ class BestAvailableServicePostgresTest {
         }
         loadFixtures();
 
-        AvailablePlayersCache cache = mock(AvailablePlayersCache.class);
-        when(cache.get(GAME, LEAGUE)).thenReturn(new AvailablePlayersSnapshot(AVAILABLE, FETCHED_AT));
-        service = new BestAvailableService(jdbc, cache);
+        service = new BestAvailableService(jdbc);
     }
 
     @AfterEach
@@ -133,6 +131,12 @@ class BestAvailableServicePostgresTest {
                 "receiving_2pt_conversions", 1);
         // Rostered WR: 50 points, but not available.
         stat("00-0004", 1, "receiving_yards", 200, "receiving_tds", 5);
+        for (int yahooId : AVAILABLE) {
+            jdbc.update("INSERT INTO yahoo_available_players (game_id, league_id, player_id, full_name, loaded_at) " +
+                    "VALUES (?, ?, ?, ?, ?)", GAME, LEAGUE, yahooId, "Player " + yahooId, Timestamp.from(LOADED_AT));
+        }
+        // Another league's list, which must not leak into this league's results: 104 is free there.
+        jdbc.update("INSERT INTO yahoo_available_players (game_id, league_id, player_id) VALUES (?, 838859, 104)", GAME);
         // A playoff game, which the regular-season windows must ignore.
         jdbc.update("INSERT INTO nflverse_player_week_stats (player_id, season, week, season_type, passing_yards) " +
                 "VALUES ('00-0001', ?, 19, 'POST', 400)", SEASON);
@@ -175,7 +179,7 @@ class BestAvailableServicePostgresTest {
         assertEquals(SEASON, response.getSeason());
         assertEquals(1, response.getFromWeek());
         assertEquals(3, response.getToWeek());
-        assertEquals(FETCHED_AT, response.getAvailableAsOf());
+        assertEquals(LOADED_AT, response.getAvailableAsOf());
         assertEquals(5, response.getAvailablePlayerCount());
         assertEquals(4, response.getMatchedPlayerCount());
         assertEquals(List.of(19), response.getUnscoredStatIds());
@@ -228,6 +232,15 @@ class BestAvailableServicePostgresTest {
         LeagueDataNotFoundException ex = assertThrows(LeagueDataNotFoundException.class,
                 () -> service.getBestAvailable(GAME, 1, null, null, 1, "total", 50));
         assertEquals("Scoring rules for league 470.l.1 aren't loaded", ex.getMessage());
+    }
+
+    @Test
+    void leagueWithoutAnAvailablePlayersListIsNotFound() {
+        jdbc.update("DELETE FROM yahoo_available_players WHERE league_id = ?", LEAGUE);
+
+        LeagueDataNotFoundException ex = assertThrows(LeagueDataNotFoundException.class,
+                () -> service.getBestAvailable(GAME, LEAGUE, null, null, 1, "total", 50));
+        assertEquals("Available players for league 470.l.523652 aren't loaded", ex.getMessage());
     }
 
     @Test

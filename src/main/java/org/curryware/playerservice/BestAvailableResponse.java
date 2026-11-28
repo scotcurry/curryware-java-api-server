@@ -10,7 +10,7 @@ public class BestAvailableResponse {
     /** First and last NFL week (regular season) included in the totals. */
     private int fromWeek;
     private int toWeek;
-    /** When the available-player list was fetched from Yahoo (it is cached). */
+    /** When the available-players CronJob last loaded the league's list (yahoo_available_players.loaded_at). */
     private Instant availableAsOf;
     /** Players Yahoo lists as available, including kickers, defenses and others without stats. */
     private int availablePlayerCount;

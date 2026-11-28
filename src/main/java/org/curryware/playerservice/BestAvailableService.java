@@ -8,6 +8,8 @@ import org.springframework.jdbc.core.SqlParameterValue;
 import org.springframework.stereotype.Service;
 
 import java.sql.Types;
+import java.time.Instant;
+import java.time.OffsetDateTime;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Set;
@@ -19,7 +21,9 @@ import java.util.TreeSet;
  *
  * Points are calculated in Postgres from nflverse_player_week_stats and the league's
  * league_scoring_value_information, through YahooStatMapping. Players are matched to
- * nflverse by Yahoo id (nflverse_players.yahoo_id for the league's season).
+ * nflverse by Yahoo id (nflverse_players.yahoo_id for the league's season). The league's
+ * available players come from yahoo_available_players, which the curryware-nflverse
+ * available-players CronJob replaces every 6 hours.
  */
 @Service
 public class BestAvailableService {
@@ -33,12 +37,14 @@ public class BestAvailableService {
     private static final String ORDER_BY_TOTAL = "total_points DESC, points_per_game DESC, av.full_name";
     private static final String ORDER_BY_PER_GAME = "points_per_game DESC, total_points DESC, av.full_name";
 
-    private final JdbcTemplate jdbcTemplate;
-    private final AvailablePlayersCache availablePlayersCache;
+    // The league's available Yahoo ids; each query that needs them takes game_id, league_id.
+    private static final String AVAILABLE_YAHOO_IDS =
+            "SELECT ap.player_id FROM yahoo_available_players ap WHERE ap.game_id = ? AND ap.league_id = ?";
 
-    public BestAvailableService(JdbcTemplate jdbcTemplate, AvailablePlayersCache availablePlayersCache) {
+    private final JdbcTemplate jdbcTemplate;
+
+    public BestAvailableService(JdbcTemplate jdbcTemplate) {
         this.jdbcTemplate = jdbcTemplate;
-        this.availablePlayersCache = availablePlayersCache;
     }
 
     /**
@@ -66,12 +72,22 @@ public class BestAvailableService {
         }
         int fromWeek = weeks == null ? 1 : Math.max(1, latestWeek - weeks + 1);
 
-        AvailablePlayersSnapshot available = availablePlayersCache.get(gameId, leagueId);
-        String yahooIds = toPostgresArray(available.getYahooPlayerIds());
+        AvailableSummary available = jdbcTemplate.queryForObject(
+                "SELECT count(*) AS players, max(loaded_at) AS loaded_at FROM yahoo_available_players " +
+                "WHERE game_id = ? AND league_id = ?",
+                (rs, rowNum) -> {
+                    OffsetDateTime loadedAt = rs.getObject("loaded_at", OffsetDateTime.class);
+                    return new AvailableSummary(rs.getInt("players"), loadedAt == null ? null : loadedAt.toInstant());
+                },
+                gameId, leagueId);
+        if (available == null || available.players() == 0) {
+            throw new LeagueDataNotFoundException(
+                    "Available players for league " + gameId + ".l." + leagueId + " aren't loaded");
+        }
 
         Integer matched = jdbcTemplate.queryForObject(
-                "SELECT count(*) FROM nflverse_players WHERE season = ? AND yahoo_id = ANY(?::int[])",
-                Integer.class, season, yahooIds);
+                "SELECT count(*) FROM nflverse_players WHERE season = ? AND yahoo_id IN (" + AVAILABLE_YAHOO_IDS + ")",
+                Integer.class, season, gameId, leagueId);
 
         List<Object> params = new ArrayList<>();
         for (YahooStatMapping.Entry entry : YahooStatMapping.ENTRIES) {
@@ -81,7 +97,8 @@ public class BestAvailableService {
         params.add(gameId);
         params.add(leagueId);
         params.add(season);
-        params.add(yahooIds);
+        params.add(gameId);
+        params.add(leagueId);
         SqlParameterValue positionParam = new SqlParameterValue(Types.VARCHAR, position);
         params.add(positionParam);
         params.add(positionParam);
@@ -104,8 +121,8 @@ public class BestAvailableService {
         response.setSeason(season);
         response.setFromWeek(fromWeek);
         response.setToWeek(latestWeek);
-        response.setAvailableAsOf(available.getFetchedAt());
-        response.setAvailablePlayerCount(available.getYahooPlayerIds().size());
+        response.setAvailableAsOf(available.loadedAt());
+        response.setAvailablePlayerCount(available.players());
         response.setMatchedPlayerCount(matched == null ? 0 : matched);
         response.setUnscoredStatIds(new ArrayList<>(unscored));
         response.setPlayers(players);
@@ -139,7 +156,7 @@ public class BestAvailableService {
                "available AS (" +
                "  SELECT np.gsis_id, np.yahoo_id, np.full_name, np.position, np.team, np.headshot_url" +
                "  FROM nflverse_players np" +
-               "  WHERE np.season = ? AND np.yahoo_id = ANY(?::int[])" +
+               "  WHERE np.season = ? AND np.yahoo_id IN (" + AVAILABLE_YAHOO_IDS + ")" +
                "    AND (?::text IS NULL OR np.position = ?::text)), " +
                // One row per player per game. Column values are read by name from the row's
                // JSON, so the mapping stays data; a row with no scoring stats still counts as a game.
@@ -163,13 +180,8 @@ public class BestAvailableService {
                "LIMIT ?";
     }
 
-    static String toPostgresArray(List<Integer> ids) {
-        StringJoiner joiner = new StringJoiner(",", "{", "}");
-        for (Integer id : ids) {
-            joiner.add(Integer.toString(id));
-        }
-        return joiner.toString();
-    }
+    /** How many players yahoo_available_players lists for the league, and when they were loaded. */
+    private record AvailableSummary(int players, Instant loadedAt) { }
 
     private RowMapper<BestAvailablePlayer> playerRowMapper() {
         return (rs, rowNum) -> {
