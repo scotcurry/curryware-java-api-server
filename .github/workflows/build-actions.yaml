@@ -4,8 +4,22 @@ on:
     branches:
       - master
 
+# One deploy at a time, so two pushes can't race on the k8s-manifests commit. A queued deploy
+# waits instead of being cancelled.
+concurrency:
+  group: deploy-curryware-java-api-server
+  cancel-in-progress: false
+
 jobs:
+  # The same tests as on branches and pull requests, including the SQL tests against Postgres.
+  # Nothing is built or deployed unless they pass.
+  test:
+    uses: ./.github/workflows/ci.yml
+    # A called workflow gets no secrets unless passed; ci.yml needs CURRYWARE_FANTASY_DATABASE_TOKEN.
+    secrets: inherit
+
   build-docker-image:
+    needs: test
     runs-on: ubuntu-latest
     steps:
       - name: Checkout v4.2.2

@@ -1,0 +1,99 @@
+# Runs the tests on every branch and pull request, and as the first job of the deploy workflow
+# (build-actions.yaml calls it), so nothing reaches Docker Hub or k8s-manifests unless it passes.
+# Builds nothing deployable itself.
+#
+# The SQL tests (BestAvailableServicePostgresTest) need a real Postgres and the schema DDL:
+# - a throwaway postgres:17 service container, named by CURRYWARE_TEST_POSTGRES_URL;
+# - scotcurry/curryware-fantasy-database (private), checked out for its create_*.sql files with the
+#   CURRYWARE_FANTASY_DATABASE_TOKEN secret. Pull requests from forks and Dependabot don't get
+#   repository secrets, so their CI runs fail at that checkout.
+# Those tests skip themselves when the database isn't configured, so the last step fails the run
+# if any of them were skipped here.
+name: CI
+
+on:
+  push:
+    branches-ignore: [master]
+  pull_request:
+  workflow_call:
+
+permissions:
+  contents: read
+
+concurrency:
+  group: ci-${{ github.workflow }}-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  test:
+    runs-on: ubuntu-latest
+    timeout-minutes: 20
+
+    services:
+      postgres:
+        image: postgres:17
+        env:
+          POSTGRES_USER: test
+          POSTGRES_PASSWORD: test
+          POSTGRES_DB: curryware_test
+        ports:
+          - 5432:5432
+        options: >-
+          --health-cmd "pg_isready -U test -d curryware_test"
+          --health-interval 5s
+          --health-timeout 5s
+          --health-retries 12
+
+    env:
+      CURRYWARE_TEST_POSTGRES_URL: jdbc:postgresql://localhost:5432/curryware_test
+      CURRYWARE_TEST_POSTGRES_USER: test
+      CURRYWARE_TEST_POSTGRES_PASSWORD: test
+      CURRYWARE_SCHEMA_DIR: ${{ github.workspace }}/curryware-fantasy-database
+
+    steps:
+      - uses: actions/checkout@v5
+
+      # The schema source of truth. The SQL tests build their tables from it, so a schema change
+      # that breaks this service fails here. The repo is private: CURRYWARE_FANTASY_DATABASE_TOKEN is
+      # a fine-grained token with read-only Contents access to that one repo.
+      - name: Check out the schema DDL
+        uses: actions/checkout@v5
+        with:
+          repository: scotcurry/curryware-fantasy-database
+          path: curryware-fantasy-database
+          token: ${{ secrets.CURRYWARE_FANTASY_DATABASE_TOKEN }}
+
+      - uses: actions/setup-java@v5
+        with:
+          distribution: corretto
+          java-version: "17"
+          cache: gradle
+
+      - name: Run tests
+        run: ./gradlew test --console=plain
+
+      - name: Fail if the database tests were skipped
+        run: |
+          python3 - <<'EOF'
+          import glob, sys, xml.etree.ElementTree as ET
+          skipped = []
+          for path in glob.glob("build/test-results/test/*.xml"):
+              suite = ET.parse(path).getroot()
+              if "Postgres" in suite.get("name", ""):
+                  for case in suite.iter("testcase"):
+                      if case.find("skipped") is not None:
+                          skipped.append(f"{suite.get('name')}.{case.get('name')}")
+          if skipped:
+              print("These database tests were skipped, so CI didn't test the SQL:")
+              print("\n".join(skipped))
+              sys.exit(1)
+          print("No database tests were skipped.")
+          EOF
+
+      - name: Upload the test report
+        if: failure()
+        uses: actions/upload-artifact@v4
+        with:
+          name: test-report
+          path: build/reports/tests/test
+          retention-days: 7
